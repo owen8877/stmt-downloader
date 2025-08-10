@@ -1,0 +1,21 @@
+{
+  "name": "stmt-downloader",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/greasemonkey": "^4.0.7"
+  },
+  "scripts": {
+    "build-boa-watch": "powershell scripts/build.ps1 boa -watch",
+    "build-wf-watch": "powershell scripts/build.ps1 wf -watch",
+    "build-chase-watch": "powershell scripts/build.ps1 chase -watch",
+    "build-all": "powershell scripts/build.ps1 boa && powershell scripts/build.ps1 wf && powershell scripts/build.ps1 chase",
+    "serve-dist": "bunx serve dist -l 8080"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "csrf": "^3.1.0"
+  }
+}
