@@ -78,9 +78,7 @@ export function getDateRange(today: Date, endOnBusiness: boolean = false): [Date
 
   let start: Date;
   if (date.getMonth() >= 2) {
-    console.log(date.getFullYear(), 0, 1);
     start = new Date(date.getFullYear(), 0, 1);
-    console.log(start);
   } else {
     start = new Date(date.getFullYear() - 1, 6, 1);
   }
@@ -122,6 +120,55 @@ export function GM_xmlhttpRequest_promise(pack: Request) {
   return new Promise((resolve: (res: Response) => void, reject: (e: Error) => void) => {
     // @ts-ignore: https://violentmonkey.github.io/api/gm/#gm_xmlhttprequest
     GM_xmlhttpRequest({ ...pack, onload: resolve, onerror: reject });
+  });
+}
+
+interface EasyRequestOptions {
+  url: string;
+  method: "GET" | "POST.url" | "POST.form";
+  payload?: URLSearchParams;
+  headers?: { [header: string]: string };
+}
+
+export async function easyRequest({ url, method, payload, headers }: EasyRequestOptions): Promise<string> {
+  function helper() {
+    if (method === "GET") {
+      const U = new URL(url);
+      payload?.forEach((value, key) => U.searchParams.append(decodeURIComponent(key), decodeURIComponent(value)));
+      return GM_xmlhttpRequest_promise({ method: "GET", url: U.toString(), headers });
+    } else if (method === "POST.url") {
+      return GM_xmlhttpRequest_promise({
+        method: "POST",
+        url,
+        data: payload?.toString(),
+        headers: { "Content-Type": "application/x-www-form-urlencoded", ...headers },
+      });
+    } else if (method === "POST.form") {
+      const formData = new FormData();
+      payload?.forEach((value, key) => formData.append(decodeURIComponent(key), decodeURIComponent(value)));
+      return GM_xmlhttpRequest_promise({ method: "POST", url, data: formData, headers });
+    }
+    throw new Error(`Unsupported method: ${method}`);
+  }
+
+  const { status, responseText } = await helper();
+  if (status !== 200) {
+    throw new Error(`Request failed: ${status} ${responseText}`);
+  }
+  return responseText;
+}
+
+interface EasyDownloadOptions {
+  content: string;
+  name: string;
+  saveAs?: boolean;
+}
+
+export async function easyDownload({ content, name, saveAs = true }: EasyDownloadOptions): Promise<void> {
+  await GM_download_promise({
+    url: URL.createObjectURL(new Blob([content.trim()], { type: "application/x-qfx" })),
+    name,
+    saveAs,
   });
 }
 

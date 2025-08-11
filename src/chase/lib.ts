@@ -1,67 +1,18 @@
 "use strict";
 import {
-  formatDateMMsDDsYYYY,
   formatDateYYYYMMDD,
   getByPoll,
   getDateRange,
   getWindowProperty,
   getElement,
-  GM_download_promise,
-  GM_xmlhttpRequest_promise,
+  easyRequest,
+  easyDownload,
 } from "../common";
 
 // config
-const DOWNLOAD_URL = "https://secure.chase.com";
 const BANK_ID = "chase";
 const LOGGER_prefix = `[${BANK_ID} Downloader]`;
 const POLL_INTERVAL = 500; // ms
-
-async function downloadDDARoutine(url: string, payload: URLSearchParams, accountName: string, endDate: string) {
-  const { status, responseText } = await GM_xmlhttpRequest_promise({
-    method: "POST",
-    url: "https://secure.chase.com/svc/rr/accounts/secure/v1/account/activity/download/dda/list",
-    data: payload.toString(),
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-  });
-
-  if (status !== 200) {
-    console.error(`${LOGGER_prefix} Request failed`, status, responseText);
-    return;
-  }
-
-  await GM_download_promise({
-    url: URL.createObjectURL(new Blob([responseText.trim()], { type: "application/x-qfx" })),
-    name: `${BANK_ID}_${accountName}_${endDate}_YTD.qfx`,
-    saveAs: true,
-  });
-  console.log(`${LOGGER_prefix} File download`);
-}
-
-async function downloadCardRoutine(url: string, payload: URLSearchParams, accountName: string, endDate: string) {
-  const U = new URL(
-    `https://secure.chase.com/svc/rr/accounts/secure/gateway/credit-card/transactions/inquiry-maintenance/digital-transaction-activity/v1/transaction-activities`
-  );
-  payload.forEach((value, key) => U.searchParams.append(decodeURIComponent(key), decodeURIComponent(value)));
-
-  const { status, responseText } = await GM_xmlhttpRequest_promise({
-    method: "GET",
-    url: U.toString(),
-  });
-
-  if (status !== 200) {
-    console.error(`${LOGGER_prefix} Request failed`, status, responseText);
-    return;
-  }
-
-  await GM_download_promise({
-    url: URL.createObjectURL(new Blob([responseText.trim()], { type: "application/x-qfx" })),
-    name: `${BANK_ID}_${accountName}_${endDate}_YTD.qfx`,
-    saveAs: true,
-  });
-  console.log(`${LOGGER_prefix} File download`);
-}
 
 export async function addDownloadButton() {
   const container = await getElement("#dynamic-layout-container", POLL_INTERVAL);
@@ -69,27 +20,33 @@ export async function addDownloadButton() {
   if (container.querySelector(`.${CLASS}`)) return;
 
   const btn = document.createElement("button");
-  btn.textContent = "Download Transactions";
+  btn.textContent = "Download QFX";
   btn.className = CLASS;
   btn.style.cssText = `
             padding: 8px 12px;
-            margin-bottom: 10px;
+            margin: 12px 0px 0px 0px;
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            width: fit-content;
         `;
 
   btn.addEventListener("click", async () => {
     location.hash = "#/dashboard/accountDetails/downloadAccountTransactions/index";
-    await fireDownloadProcess();
+    try {
+      await fireDownloadProcess();
+    } catch (err) {
+      console.error("[WF Downloader] Error:", err);
+    }
   });
 
   container.insertBefore(btn, container.firstChild);
 }
 
 export async function fireDownloadProcess() {
+  // get csrf token
   const requirejs = await getWindowProperty(
     // @ts-ignore
     (window) => window.requirejs,
@@ -101,64 +58,75 @@ export async function fireDownloadProcess() {
     POLL_INTERVAL
   );
   const token = tokenList.response.csrfToken;
-  console.log(`${LOGGER_prefix} CSRF Token:`, sessionCache);
 
-  const { status, responseText } = await GM_xmlhttpRequest_promise({
-    method: "POST",
-    url: `${DOWNLOAD_URL}/svc/rr/accounts/secure/v1/account/activity/download/options/list`,
+  // get all account list
+  const response = await easyRequest({
+    url: "https://secure.chase.com/svc/rr/accounts/secure/v1/account/activity/download/options/list",
+    method: "POST.url",
     headers: {
-      // Referer: "https://secure.chase.com/web/auth/dashboard",
-      // "x-jpmc-channel-id": "C30",
       "x-jpmc-csrf-token": "NONE",
-      // Origin: "https://secure.chase.com",
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
     },
   });
-  if (status !== 200) {
-    console.error(`${LOGGER_prefix} Failed to fetch download options`, status, responseText);
-    return;
-  }
 
-  for (const account of JSON.parse(responseText)["downloadAccountActivityOptions"]) {
+  for (const account of JSON.parse(response)["downloadAccountActivityOptions"]) {
     console.log(`${LOGGER_prefix} Processing account:`, account);
     const { accountId, summaryType, nickName, mask } = account;
-    const [build, download] =
-      summaryType == "DDA" ? [buildCheckingPayload, downloadDDARoutine] : [buildCardPayload, downloadCardRoutine];
-    const [payload, endDate] = build(accountId, token);
-    console.log(`${LOGGER_prefix} Payload:`, payload);
-    console.log(`${LOGGER_prefix} End Date:`, endDate);
-
-    await download(account.downloadUrl, payload, `${trimAccountName(nickName)}_${mask}`, endDate);
+    const routine = summaryType == "DDA" ? DDARoutine : CardRoutine;
+    const [content, endDate] = await routine(accountId, token);
+    await easyDownload({
+      content,
+      name: `${BANK_ID}_${trimAccountName(nickName)}_${mask}_${endDate}_YTD.qfx`,
+      saveAs: true,
+    });
   }
 }
 
-function buildCheckingPayload(accountId: string, csrftoken: string): [URLSearchParams, string] {
-  const params = new URLSearchParams();
+async function DDARoutine(accountId: string, csrftoken: string): Promise<[string, string]> {
+  const payload = new URLSearchParams();
   const [startDate, endDate] = getDateRange(new Date());
 
-  params.append("dateHi", formatDateYYYYMMDD(endDate));
-  params.append("dateLo", formatDateYYYYMMDD(startDate));
-  params.append("statementPeriodId", "ALL");
-  params.append("transactionType", "ALL");
-  params.append("filterTranType", "ALL");
-  params.append("downloadType", "QFX");
-  params.append("accountId", accountId);
-  params.append("csrftoken", csrftoken);
-  params.append("submit", "Submit");
-  return [params, formatDateYYYYMMDD(endDate)];
+  const eStr = formatDateYYYYMMDD(endDate);
+  payload.append("dateHi", eStr);
+  payload.append("dateLo", formatDateYYYYMMDD(startDate));
+  payload.append("statementPeriodId", "ALL");
+  payload.append("transactionType", "ALL");
+  payload.append("filterTranType", "ALL");
+  payload.append("downloadType", "QFX");
+  payload.append("accountId", accountId);
+  payload.append("csrftoken", csrftoken);
+  payload.append("submit", "Submit");
+
+  const response = await easyRequest({
+    url: "https://secure.chase.com/svc/rr/accounts/secure/v1/account/activity/download/dda/list",
+    method: "POST.url",
+    payload,
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  });
+
+  return [response, eStr];
 }
 
-function buildCardPayload(accountId: string, csrftoken: string): [URLSearchParams, string] {
-  const params = new URLSearchParams();
+async function CardRoutine(accountId: string, csrftoken: string): Promise<[string, string]> {
+  const payload = new URLSearchParams();
   const [startDate, endDate] = getDateRange(new Date());
 
-  params.append("end-date", formatDateYYYYMMDD(endDate));
-  params.append("start-date", formatDateYYYYMMDD(startDate));
-  params.append("account-activity-download-type-code", "QFX");
-  params.append("digital-account-identifier", accountId);
-  params.append("csrftoken", csrftoken);
-  params.append("submit", "Submit");
-  return [params, formatDateMMsDDsYYYY(endDate)];
+  payload.append("end-date", formatDateYYYYMMDD(endDate));
+  payload.append("start-date", formatDateYYYYMMDD(startDate));
+  payload.append("account-activity-download-type-code", "QFX");
+  payload.append("digital-account-identifier", accountId);
+  payload.append("csrftoken", csrftoken);
+  payload.append("submit", "Submit");
+
+  const response = await easyRequest({
+    url: "https://secure.chase.com/svc/rr/accounts/secure/gateway/credit-card/transactions/inquiry-maintenance/digital-transaction-activity/v1/transaction-activities",
+    method: "GET",
+    payload,
+  });
+
+  return [response, formatDateYYYYMMDD(endDate)];
 }
 
 export function trimAccountName(name: string) {

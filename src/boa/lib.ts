@@ -1,15 +1,7 @@
 "use strict";
-import {
-  formatDateMMsDDsYYYY,
-  getDateRange,
-  getElement,
-  GM_download_promise,
-  GM_xmlhttpRequest_promise,
-  type Clickable,
-} from "../common";
+import { easyDownload, easyRequest, formatDateMMsDDsYYYY, getDateRange, getElement, type Clickable } from "../common";
 
 // config
-const DOWNLOAD_URL = "https://secure.bankofamerica.com/ogateway/addapi/v1/download/form/transaction";
 const BANK_ID = "boa";
 const LOGGER_prefix = `[${BANK_ID} Downloader]`;
 const POLL_INTERVAL = 500; // ms
@@ -23,24 +15,19 @@ export async function fireDownloadProcess(btn: Clickable) {
   // get account token and download qfx
   const token = getAccountToken();
   const [payload, endDate] = buildPayload(token);
-
   const accountName = getAccountName();
-  const { status, responseText } = await GM_xmlhttpRequest_promise({
-    method: "POST",
-    url: DOWNLOAD_URL,
-    data: payload.toString(),
+
+  const content = await easyRequest({
+    method: "POST.url",
+    url: "https://secure.bankofamerica.com/ogateway/addapi/v1/download/form/transaction",
+    payload,
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
   });
 
-  if (status !== 200) {
-    console.error(`${LOGGER_prefix} Request failed`, status, responseText);
-    return;
-  }
-
-  await GM_download_promise({
-    url: URL.createObjectURL(new Blob([responseText.trim()], { type: "application/x-qfx" })),
+  await easyDownload({
+    content,
     name: `${BANK_ID}_${accountName}_${endDate}_YTD.qfx`,
     saveAs: true,
   });
@@ -57,15 +44,15 @@ function getAccountToken() {
 }
 
 function buildPayload(token: string): [URLSearchParams, string] {
-  const params = new URLSearchParams();
+  const payload = new URLSearchParams();
   const [startDate, endDate] = getDateRange(new Date(), true);
-  params.append("payload.accountToken", token);
-  params.append("payload.locale", "en-us");
-  params.append("payload.txnSearchCriteria.txnPeriod", "custom range");
-  params.append("payload.txnSearchCriteria.startDate", formatDateMMsDDsYYYY(startDate));
-  params.append("payload.txnSearchCriteria.endDate", formatDateMMsDDsYYYY(endDate));
-  params.append("payload.txnSearchCriteria.fileType", "qfx");
-  return [params, formatDateMMsDDsYYYY(endDate)];
+  payload.append("payload.accountToken", token);
+  payload.append("payload.locale", "en-us");
+  payload.append("payload.txnSearchCriteria.txnPeriod", "custom range");
+  payload.append("payload.txnSearchCriteria.startDate", formatDateMMsDDsYYYY(startDate));
+  payload.append("payload.txnSearchCriteria.endDate", formatDateMMsDDsYYYY(endDate));
+  payload.append("payload.txnSearchCriteria.fileType", "qfx");
+  return [payload, formatDateMMsDDsYYYY(endDate)];
 }
 
 function getRawAccountName() {
