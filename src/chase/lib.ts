@@ -38,7 +38,7 @@ export async function addDownloadButton() {
     try {
       await fireDownloadProcess();
     } catch (err) {
-      console.error("[WF Downloader] Error:", err);
+      console.error(`[${BANK_ID} Downloader] Error:`, err);
     }
   });
 

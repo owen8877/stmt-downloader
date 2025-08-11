@@ -9,7 +9,8 @@
     "build-boa-watch": "powershell scripts/build.ps1 boa -watch",
     "build-wf-watch": "powershell scripts/build.ps1 wf -watch",
     "build-chase-watch": "powershell scripts/build.ps1 chase -watch",
-    "build-all": "powershell scripts/build.ps1 boa && powershell scripts/build.ps1 wf && powershell scripts/build.ps1 chase",
+    "build-amex-watch": "powershell scripts/build.ps1 amex -watch",
+    "build-all": "powershell scripts/build.ps1 boa && powershell scripts/build.ps1 wf && powershell scripts/build.ps1 chase && powershell scripts/build.ps1 amex",
     "serve-dist": "bunx serve dist -l 8080"
   },
   "peerDependencies": {

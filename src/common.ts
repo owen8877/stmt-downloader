@@ -2,10 +2,20 @@ export interface Clickable {
   click(): void;
 }
 
-export async function getElement(selector: string, POLL_INTERVAL: number): Promise<Element & Clickable> {
+export async function getElement(
+  selector: string | Iterable<string>,
+  POLL_INTERVAL: number
+): Promise<Element & Clickable> {
   return new Promise((resolve) => {
     const check = setInterval(() => {
-      const el: Element | null = document.querySelector(selector);
+      let el;
+      if (typeof selector === "string") {
+        el = document.querySelector(selector);
+      } else {
+        el = Array.from(selector)
+          .map((s) => document.querySelector(s))
+          .find(Boolean);
+      }
       if (el) {
         clearInterval(check);
         // @ts-ignore
@@ -48,6 +58,13 @@ export function formatDateMMsDDsYYYY(date: Date): string {
 
 export function formatDateYYYYMMDD(date: Date): string {
   return `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, "0")}${date
+    .getDate()
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+export function formatDateYYYYdMMdDD(date: Date): string {
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date
     .getDate()
     .toString()
     .padStart(2, "0")}`;
