@@ -36,11 +36,9 @@ jobs:
       - name: Get latest tag
         id: get_tag
         run: |
-          # Fetch tags first
           git fetch --tags
-          # Get the most recent tag by commit date
-          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-          echo "tag=$latest_tag" >> $GITHUB_OUTPUT
+          $latest_tag = git describe --tags $(git rev-list --tags --max-count=1)
+          echo "tag=$latest_tag" >> $env:GITHUB_OUTPUT
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
