@@ -36,7 +36,7 @@ jobs:
       - name: Create GitHub Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || github.event.repository.tags[0].name }}
           files: |
             dist/**
           generate_release_notes: true
