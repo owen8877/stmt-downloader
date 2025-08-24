@@ -9,5 +9,5 @@ try {
   const observer = new MutationObserver(addDownloadButton);
   observer.observe(document.body, { childList: true, subtree: true });
 } catch (err) {
-  console.error("[WF Downloader] Error:", err);
+  console.error("[Amex Downloader] Error:", err);
 }

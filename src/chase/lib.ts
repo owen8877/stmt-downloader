@@ -15,7 +15,7 @@ const LOGGER_prefix = `[${BANK_ID} Downloader]`;
 const POLL_INTERVAL = 500; // ms
 
 export async function addDownloadButton() {
-  const container = await getElement("#dynamic-layout-container", POLL_INTERVAL);
+  const container = await getElement("#navigation", POLL_INTERVAL);
   const CLASS = "my-download-btn";
   if (container.querySelector(`.${CLASS}`)) return;
 

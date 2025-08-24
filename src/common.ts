@@ -55,6 +55,12 @@ export function formatDateMMsDDsYYYY(date: Date): string {
     .toString()
     .padStart(2, "0")}/${date.getFullYear()}`;
 }
+export function formatDateYYYYdMMdDD(date: Date): string {
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date
+    .getDate()
+    .toString()
+    .padStart(2, "0")}`;
+}
 
 export function formatDateYYYYMMDD(date: Date): string {
   return `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, "0")}${date
@@ -63,13 +69,33 @@ export function formatDateYYYYMMDD(date: Date): string {
     .padStart(2, "0")}`;
 }
 
-export function formatDateYYYYdMMdDD(date: Date): string {
-  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date
-    .getDate()
-    .toString()
-    .padStart(2, "0")}`;
-}
+export function getRelDateRange(today: Date, monthPushBack: number, endOnBusiness: boolean = false): [Date, Date] {
+  let date = new Date(today);
+  if (endOnBusiness) {
+    // Move back to previous day if today is weekend
+    if (date.getDay() === 0) {
+      // Sunday
+      date.setDate(date.getDate() - 2);
+    } else if (date.getDay() === 6) {
+      // Saturday
+      date.setDate(date.getDate() - 1);
+    } else {
+      date.setDate(date.getDate() - 1);
+      // If yesterday was weekend, move to Friday
+      if (date.getDay() === 0) {
+        // Sunday
+        date.setDate(date.getDate() - 2);
+      } else if (date.getDay() === 6) {
+        // Saturday
+        date.setDate(date.getDate() - 1);
+      }
+    }
+  }
 
+  let start: Date;
+  start = new Date(date.getFullYear(), date.getMonth() - monthPushBack, 1);
+  return [start, date];
+}
 export function getDateRange(today: Date, endOnBusiness: boolean = false): [Date, Date] {
   let date = new Date(today);
   if (endOnBusiness) {
@@ -142,7 +168,7 @@ export function GM_xmlhttpRequest_promise(pack: Request) {
 
 interface EasyRequestOptions {
   url: string;
-  method: "GET" | "POST.url" | "POST.form";
+  method: "GET" | "POST.url" | "POST.form" | "POST.json";
   payload?: URLSearchParams;
   headers?: { [header: string]: string };
 }
@@ -164,6 +190,17 @@ export async function easyRequest({ url, method, payload, headers }: EasyRequest
       const formData = new FormData();
       payload?.forEach((value, key) => formData.append(decodeURIComponent(key), decodeURIComponent(value)));
       return GM_xmlhttpRequest_promise({ method: "POST", url, data: formData, headers });
+    } else if (method === "POST.json") {
+      const _headers: Map<string, string> = new Map(Object.entries(headers || {}));
+      if (!(_headers.get("Content-Type") || _headers.has("content-type"))) {
+        _headers.set("Content-Type", "application/json");
+      }
+      return GM_xmlhttpRequest_promise({
+        method: "POST",
+        url,
+        data: JSON.stringify(payload),
+        headers: Object.fromEntries(_headers),
+      });
     }
     throw new Error(`Unsupported method: ${method}`);
   }
@@ -182,8 +219,12 @@ interface EasyDownloadOptions {
 }
 
 export async function easyDownload({ content, name, saveAs = true }: EasyDownloadOptions): Promise<void> {
+  let type;
+  if (name.endsWith(".qfx")) type = "application/x-qfx";
+  else if (name.endsWith(".csv")) type = "text/csv";
+  else type = "application/octet-stream";
   await GM_download_promise({
-    url: URL.createObjectURL(new Blob([content.trim()], { type: "application/x-qfx" })),
+    url: URL.createObjectURL(new Blob([content.trim()], { type })),
     name,
     saveAs,
   });
@@ -200,4 +241,16 @@ export function GM_download_promise(option: GM_download_options) {
     // @ts-ignore: https://violentmonkey.github.io/api/gm/#gm_download
     GM_download({ url, name, saveAs, onload: resolve, onerror: reject });
   });
+}
+
+export function easySetValue(key: string, value: any) {
+  // https://violentmonkey.github.io/api/gm/#gm_setvalue
+  //@ts-ignore
+  GM_setValue(key, value);
+}
+
+export function easyGetValue(key: string): string {
+  // https://violentmonkey.github.io/api/gm/#gm_getvalue
+  //@ts-ignore
+  return GM_getValue(key);
 }
