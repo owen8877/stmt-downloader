@@ -1,14 +1,5 @@
 "use strict";
-import {
-  formatDateYYYYMMDD,
-  getDateRange,
-  getWindowProperty,
-  getElement,
-  easyRequest,
-  easyDownload,
-  formatDateYYYYdMMdDD,
-  getRelDateRange,
-} from "../common";
+import { formatDateYYYYMMDD, easyRequest, easyDownload, formatDateYYYYdMMdDD, getRelDateRange } from "../common";
 
 // config
 const BANK_ID = "sofi";
@@ -131,7 +122,6 @@ async function routine(account_id: string): Promise<[string, string]> {
 
   console.log(`Payload:`, payload.toString());
 
-  
   const response = await easyRequest({
     url: `https://www.sofi.com/money-transactions-hist-service/api/public/v1/accounts/transactions/export/${account_id}`,
     method: "GET",

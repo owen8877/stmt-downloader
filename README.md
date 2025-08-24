@@ -26,3 +26,4 @@ By using this project, you agree to take full responsibility for your actions an
 
 - `bun serve-dist`
 - `bun build-discover-watch`
+- `git push --tags && git push`

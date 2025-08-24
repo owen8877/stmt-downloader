@@ -1,7 +1,6 @@
 "use strict";
 import {
   formatDateYYYYMMDD,
-  getByPoll,
   getDateRange,
   getWindowProperty,
   getElement,
@@ -149,7 +148,6 @@ async function routine(account_id: string, token: string): Promise<[string, stri
     //@ts-ignore
     payload,
     headers: {
-      // "one-time-token": token,
       "x-2fa-approval": token,
       //@ts-ignore
       "x-access-token": easyGetValue("wise_xaccess_token"),
