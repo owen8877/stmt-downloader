@@ -1,13 +1,5 @@
 "use strict";
-import {
-  formatDateYYYYMMDD,
-  getByPoll,
-  getDateRange,
-  getWindowProperty,
-  getElement,
-  easyRequest,
-  easyDownload,
-} from "../common";
+import { formatDateYYYYMMDD, getDateRange, getElement, easyRequest, easyDownload, trimAccountName } from "../common";
 
 // config
 const BANK_ID = "discover";
@@ -83,11 +75,4 @@ async function routine(): Promise<[string, string]> {
   });
 
   return [response, eStr];
-}
-
-export function trimAccountName(name: string) {
-  return name
-    .trim()
-    .replace(/[\s-.]+/g, "")
-    .replace(/[\u2122\u00AE\u00A9]/g, ""); // Remove ™, ®, ©
 }

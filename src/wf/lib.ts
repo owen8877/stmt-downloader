@@ -4,7 +4,8 @@ import {
   easyRequest,
   formatDateMMsDDsYYYY,
   getDateRange,
-  getWindowProperty as getWindowProperty,
+  getWindowProperty,
+  trimAccountName,
 } from "../common";
 
 // config
@@ -58,11 +59,4 @@ async function routine(accountId: string): Promise<[URLSearchParams, string]> {
   payload.append("fileFormat", "quicken");
 
   return [payload, formatDateMMsDDsYYYY(endDate)];
-}
-
-export function trimAccountName(name: string) {
-  return name
-    .trim()
-    .replace(/[\s-.]+/g, "")
-    .replace(/[\u2122\u00AE\u00A9]/g, ""); // Remove ™, ®, ©
 }

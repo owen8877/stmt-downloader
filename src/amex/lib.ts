@@ -1,5 +1,5 @@
 "use strict";
-import { getElement, easyRequest, easyDownload, formatDateYYYYdMMdDD, GM_xmlhttpRequest_promise } from "../common";
+import { getElement, easyDownload, formatDateYYYYdMMdDD, GM_xmlhttpRequest_promise } from "../common";
 
 // config
 const BANK_ID = "amex";
@@ -97,11 +97,4 @@ async function buildPayload(accountKey: string): Promise<[URLSearchParams, strin
   payload.append("client_id", "AmexAPI");
 
   return [payload, eStr];
-}
-
-export function trimAccountName(name: string) {
-  return name
-    .trim()
-    .replace(/[\s-.]+/g, "")
-    .replace(/[\u2122\u00AE\u00A9]/g, ""); // Remove ™, ®, ©
 }

@@ -254,3 +254,10 @@ export function easyGetValue(key: string): string {
   //@ts-ignore
   return GM_getValue(key);
 }
+
+export function trimAccountName(name: string) {
+  return name
+    .trim()
+    .replace(/[\s-.]+/g, "")
+    .replace(/[\u2122\u00AE\u00A9]/g, ""); // Remove ™, ®, ©
+}

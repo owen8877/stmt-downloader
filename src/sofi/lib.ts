@@ -133,10 +133,3 @@ async function routine(account_id: string): Promise<[string, string]> {
 
   return [response, eStr];
 }
-
-export function trimAccountName(name: string) {
-  return name
-    .trim()
-    .replace(/[\s-.]+/g, "")
-    .replace(/[\u2122\u00AE\u00A9]/g, ""); // Remove ™, ®, ©
-}

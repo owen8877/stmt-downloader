@@ -7,6 +7,7 @@ import {
   getElement,
   easyRequest,
   easyDownload,
+  trimAccountName,
 } from "../common";
 
 // config
@@ -127,11 +128,4 @@ async function CardRoutine(accountId: string, csrftoken: string): Promise<[strin
   });
 
   return [response, formatDateYYYYMMDD(endDate)];
-}
-
-export function trimAccountName(name: string) {
-  return name
-    .trim()
-    .replace(/[\s-.]+/g, "")
-    .replace(/[\u2122\u00AE\u00A9]/g, ""); // Remove ™, ®, ©
 }

@@ -1,5 +1,13 @@
 "use strict";
-import { easyDownload, easyRequest, formatDateMMsDDsYYYY, getDateRange, getElement, type Clickable } from "../common";
+import {
+  easyDownload,
+  easyRequest,
+  formatDateMMsDDsYYYY,
+  getDateRange,
+  getElement,
+  trimAccountName,
+  type Clickable,
+} from "../common";
 
 // config
 const BANK_ID = "boa";
@@ -59,10 +67,6 @@ function getRawAccountName() {
   const el = document.querySelector("#account-displayname-label");
   if (!el) return "account";
   return el.textContent;
-}
-
-export function trimAccountName(name: string) {
-  return name.trim().replace(/[\s-]+/g, "");
 }
 
 function getAccountName() {
