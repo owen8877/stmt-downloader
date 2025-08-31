@@ -15,13 +15,15 @@
     "build-venmo-watch": "powershell scripts/build.ps1 venmo -watch",
     "build-sofi-watch": "powershell scripts/build.ps1 sofi -watch",
     "build-fidelity-watch": "powershell scripts/build.ps1 fidelity -watch",
-    "build-all": "powershell scripts/build.ps1 boa && powershell scripts/build.ps1 wf && powershell scripts/build.ps1 chase && powershell scripts/build.ps1 amex && powershell scripts/build.ps1 discover && powershell scripts/build.ps1 wise && powershell scripts/build.ps1 venmo && powershell scripts/build.ps1 sofi && powershell scripts/build.ps1 fidelity",
+    "build-amazon-watch": "powershell scripts/build.ps1 amazon -watch",
+    "build-all": "powershell scripts/build.ps1 boa && powershell scripts/build.ps1 wf && powershell scripts/build.ps1 chase && powershell scripts/build.ps1 amex && powershell scripts/build.ps1 discover && powershell scripts/build.ps1 wise && powershell scripts/build.ps1 venmo && powershell scripts/build.ps1 sofi && powershell scripts/build.ps1 fidelity && powershell scripts/build.ps1 amazon",
     "serve-dist": "bunx serve dist -l 8080"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "csrf": "^3.1.0"
+    "csrf": "^3.1.0",
+    "js-md5": "^0.8.3"
   }
 }

@@ -11,6 +11,7 @@ currently supporting
 - Venmo (csv only)
 - Sofi (csv only, 2 months back due to SB sofi-IT systems)
 - Fidelity (csv only, button on activities/orders page due to the need to grab/replay graphQL query)
+- Amazon (last 3mo synthetic qfx)
 
 ## Disclaimer
 
