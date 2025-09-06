@@ -2,7 +2,7 @@
 // @name         Amazon QFX Statement Exporter
 // @namespace    Violentmonkey Scripts
 // @license      MIT
-// @version      1.1.11
+// @version      1.1.12
 // @description  Automatically download QFX statements from Amazon
 // @match        https://*.amazon.com/*
 // @grant        GM_download

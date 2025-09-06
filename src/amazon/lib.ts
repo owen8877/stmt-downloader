@@ -95,7 +95,7 @@ async function collectTransactionData() {
         hint,
         currentDate ? new Date(currentDate) : new Date("2000-01-01"),
         // take out $ from amount and take negative,
-        -parseFloat(hint_amount[1].replace(/[$,]/g, "")) || 0,
+        parseFloat(hint_amount[1].replace(/[$,]/g, "")) || 0,
         // @ts-ignore
         "",
         description || ""
@@ -118,7 +118,7 @@ async function collectTransactionData() {
         hint,
         currentDate ? new Date(currentDate) : new Date("2000-01-01"),
         // take out $ from amount and take negative,
-        -parseFloat(hint_amount[1].replace(/[$,]/g, "")) || 0,
+        parseFloat(hint_amount[1].replace(/[$,]/g, "")) || 0,
         // @ts-ignore
         url_element.href || "",
         description || ""
@@ -243,7 +243,7 @@ NEWFILEUID:NONE
           <TRNAMT>${t.amount}
           <FITID>${formatQFXDate(t.date)}${hash}
           <NAME>${t.description}
-          <MEMO>${(transactionCount[t.id] ?? 0) > 1 ? "mixed" : ""}
+          <MEMO>ID${t.id}-${(transactionCount[t.id] ?? 0) > 1 ? "mixed" : ""}
         </STMTTRN>
     `;
   });
