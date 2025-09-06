@@ -1,6 +1,6 @@
 "use strict";
 import { getElement, easyDownload, easySetValue, easyGetValue } from "../common";
-import { md5 } from "js-md5";
+declare const md5: typeof import("js-md5")["md5"];
 
 // config
 const BANK_ID = "amazon";
